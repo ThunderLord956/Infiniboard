@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Realtime Drawing Board</title>
+    <style>
+        body { margin: 0; text-align: center; }
+        canvas { border: 1px solid black; background: white; touch-action: none; }
+    </style>
+</head>
+<body>
+    <h1>🎨 Real-Time Drawing Board</h1>
+    <canvas id="drawingCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById("drawingCanvas");
+        const ctx = canvas.getContext("2d");
+        const socket = new WebSocket("ws://" + window.location.host);
+
+        // Set canvas size
+        canvas.width = window.innerWidth * 0.8;
+        canvas.height = window.innerHeight * 0.7;
+
+        let drawing = false;
+        let userColor = "#000"; // Default black
+
+        // Handle WebSocket Messages
+        socket.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+
+            if (data.type === "init") {
+                // Load existing drawings on connection
+                data.drawingData.forEach(draw => {
+                    drawLine(draw.x, draw.y, draw.type, draw.color);
+                });
+            } else {
+                drawLine(data.x, data.y, data.type, data.color);
+            }
+        };
+
+        // Function to Draw on Canvas
+        function drawLine(x, y, type, color) {
+            ctx.strokeStyle = color || "#000";
+            if (type === "start") {
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+            } else if (type === "draw") {
+                ctx.lineTo(x, y);
+                ctx.stroke();
+            } else if (type === "end") {
+                ctx.beginPath();
+            }
+        }
+
+        // Start Drawing (mousedown)
+        canvas.addEventListener("mousedown", (e) => {
+            drawing = true;
+            ctx.beginPath();
+            const x = e.clientX - canvas.offsetLeft;
+            const y = e.clientY - canvas.offsetTop;
+            ctx.moveTo(x, y);
+
+            // Send "start" event with color
+            socket.send(JSON.stringify({ type: "start", x, y, color: userColor }));
+        });
+
+        // Draw (mousemove)
+        canvas.addEventListener("mousemove", (e) => {
+            if (!drawing) return;
+            const x = e.clientX - canvas.offsetLeft;
+            const y = e.clientY - canvas.offsetTop;
+            ctx.lineTo(x, y);
+            ctx.stroke();
+
+            // Send "draw" event
+            socket.send(JSON.stringify({ type: "draw", x, y, color: userColor }));
+        });
+
+        // Stop Drawing (mouseup)
+        canvas.addEventListener("mouseup", () => {
+            drawing = false;
+
+            // Send "end" event
+            socket.send(JSON.stringify({ type: "end" }));
+        });
+    </script>
+</body>
+</html>
