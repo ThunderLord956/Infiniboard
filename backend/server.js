@@ -49,14 +49,14 @@ wss.on("connection", function connection(ws) {
     });
 
     ws.on("close", () => {
-        console.log("❌ A user disconnected");
+        console.log("🛫 A user disconnected");
         users.delete(ws); // Remove user on disconnect
     });
 });
 
 // Serve the frontend
 app.get("/", (req, res) => {
-    res.sendFile(__dirname + "/index.html");
+    res.sendFile(__dirname + "/frontend/index.html");
 });
 
 // Start Server
