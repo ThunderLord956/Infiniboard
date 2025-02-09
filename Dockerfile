@@ -4,4 +4,4 @@ COPY package.json package-lock.json ./
 RUN npm install
 COPY . .
 EXPOSE 4000
-CMD ["node", "server.js"]
+CMD ["node", "/app/backend/server.js"]

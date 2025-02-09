@@ -1,3 +1,4 @@
+const path = require('path');
 const express = require("express");
 const { createServer } = require("http");
 const WebSocket = require("ws");
@@ -56,7 +57,7 @@ wss.on("connection", function connection(ws) {
 
 // Serve the frontend
 app.get("/", (req, res) => {
-    res.sendFile(__dirname + "/frontend/index.html");
+    res.sendFile(path.join(__dirname, '../frontend/index.html'));
 });
 
 // Start Server
